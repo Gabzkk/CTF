@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>CTF :: OPERATION DEEP PIXEL</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080c14;font-family:'Courier New',monospace;color:#c9d1d9;min-height:100vh}
+.app{max-width:960px;margin:0 auto;padding:16px}
+.header{background:#0d1117;border:1px solid #30363d;border-radius:8px 8px 0 0;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-size:12px;font-weight:bold;letter-spacing:3px;color:#f85149}
+.header-sub{font-size:10px;color:#8b949e;margin-left:12px;letter-spacing:1px}
+.header-meta{display:flex;gap:18px;font-size:11px;color:#8b949e}
+.body{display:flex;background:#0d1117;border:1px solid #30363d;border-top:none;min-height:580px}
+.sidebar{width:196px;background:#161b22;border-right:1px solid #30363d;padding:14px;flex-shrink:0}
+.sh3{color:#8b949e;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #30363d}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;margin:2px 2px 2px 0}
+.bh{background:#3d1f1e;color:#f85149}.bs{background:#1a2640;color:#58a6ff}.bp{background:#1a2d1a;color:#56d364}
+.ci{font-size:11px;color:#8b949e;line-height:1.7;margin:8px 0}
+.prog{margin:12px 0}
+.prog-bar{height:4px;background:#21262d;border-radius:2px;margin-top:4px}
+.prog-fill{height:100%;background:#56d364;border-radius:2px;width:0;transition:width 0.5s}
+.hints{margin-top:12px}
+.hbtn{display:block;width:100%;padding:7px 10px;margin-bottom:6px;background:#21262d;border:1px solid #30363d;color:#8b949e;cursor:pointer;font-family:inherit;font-size:11px;text-align:left;border-radius:4px;transition:.2s}
+.hbtn:hover:not(:disabled){border-color:#f0883e;color:#f0883e}
+.hbtn:disabled{opacity:0.3;cursor:not-allowed}
+.htxt{background:#0d1117;border:1px solid #f0883e33;border-left:2px solid #f0883e;border-radius:4px;padding:8px;font-size:11px;color:#f0883e;margin-bottom:6px;display:none;line-height:1.6}
+.htxt.v{display:block}
+.main{flex:1;padding:16px;overflow-y:auto;max-height:580px}
+.tabs{display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #30363d}
+.tbtn{padding:7px 16px;background:transparent;border:none;border-bottom:2px solid transparent;color:#8b949e;cursor:pointer;font-family:inherit;font-size:12px;margin-bottom:-1px;transition:.2s;letter-spacing:.5px}
+.tbtn:hover{color:#c9d1d9}
+.tbtn.a{color:#58a6ff;border-bottom-color:#58a6ff}
+.tpanel{display:none}
+.tpanel.a{display:block}
+.tbox{background:#010409;border:1px solid #21262d;border-radius:6px;padding:14px;font-size:12px;line-height:1.8;margin-bottom:14px}
+.p{color:#56d364}.c2{color:#8b949e}.hl{color:#58a6ff}.wn{color:#f0883e}.er{color:#f85149}
+.blink{animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+/* Canvas container: position:relative so tooltip is positioned inside it */
+.cc{position:relative;display:inline-block;margin-bottom:8px;max-width:100%;overflow:hidden}
+canvas#main-canvas{display:block;border:1px solid #30363d;cursor:crosshair;border-radius:4px;max-width:100%;height:auto}
+.pxi{position:absolute;background:rgba(0,0,0,.93);border:1px solid #56d364;padding:3px 8px;font-size:10px;color:#56d364;pointer-events:none;border-radius:4px;white-space:nowrap;display:none;z-index:10}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.ei{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px}
+.ei h4{color:#8b949e;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.ei pre{font-size:11px;color:#bc8cff;white-space:pre-wrap;word-break:break-all;line-height:1.5;max-height:110px;overflow-y:auto}
+.tool{background:#161b22;border:1px solid #30363d;border-radius:6px;margin-bottom:10px;overflow:hidden}
+.th{padding:9px 14px;background:#21262d;border-bottom:1px solid #30363d;font-size:11px;color:#58a6ff;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.tb2{padding:14px}
+.cg{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.cg label{font-size:11px;color:#8b949e;min-width:90px}
+select,input[type=number],input[type=text]{background:#010409;border:1px solid #30363d;color:#56d364;padding:4px 8px;font-family:inherit;font-size:11px;border-radius:4px;outline:none}
+select:focus,input:focus{border-color:#58a6ff}
+.rbtn{padding:5px 14px;background:#21262d;border:1px solid #56d364;color:#56d364;cursor:pointer;font-family:inherit;font-size:11px;border-radius:4px;transition:.2s}
+.rbtn:hover{background:rgba(86,211,100,.1)}
+.rbtn2{border-color:#58a6ff;color:#58a6ff}
+.rbtn2:hover{background:rgba(88,166,255,.1)}
+.ob{background:#010409;border:1px solid #21262d;border-radius:4px;padding:10px;font-size:11px;color:#56d364;min-height:55px;max-height:160px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;margin-top:10px;display:none}
+.flag-form{max-width:480px}
+.finput{width:100%;padding:11px 14px;background:#010409;border:1px solid #30363d;color:#56d364;font-family:inherit;font-size:14px;border-radius:4px;outline:none;margin-bottom:10px}
+.finput:focus{border-color:#56d364;box-shadow:0 0 0 3px rgba(86,211,100,.08)}
+.sbtn{padding:11px 22px;background:#21262d;border:1px solid #56d364;color:#56d364;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;border-radius:4px;letter-spacing:1px;transition:.2s}
+.sbtn:hover{background:rgba(86,211,100,.1)}
+.sres{padding:10px 14px;border-radius:4px;font-size:13px;margin-top:10px;display:none}
+.sres.ok{display:block;background:rgba(86,211,100,.08);border:1px solid #56d364;color:#56d364}
+.sres.no{display:block;background:rgba(248,81,73,.08);border:1px solid #f85149;color:#f85149}
+.att{font-size:11px;color:#8b949e;margin-top:8px}
+/* Solved panel sits between body and footer */
+.solved{display:none;background:#0d1117;border:1px solid #30363d;border-top:none;padding:50px 20px;align-items:center;justify-content:center;flex-direction:column}
+.solved.show{display:flex}
+.sbox{background:#161b22;border:2px solid #56d364;border-radius:12px;padding:36px;max-width:460px;width:100%;box-shadow:0 0 40px rgba(86,211,100,.12)}
+.site-footer{background:#161b22;border:1px solid #30363d;border-top:none;border-radius:0 0 8px 8px;padding:8px 18px;display:flex;justify-content:space-between;font-size:10px;color:#8b949e}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+</style>
+</head>
+<body>
+<h1 class="sr-only">CTF Steganography Challenge — find the hidden flag in the intercepted image</h1>
+<div class="app">
+
+<div class="header">
+  <div style="display:flex;align-items:center">
+    <span class="header-title">◉ OPERATION: DEEP PIXEL</span>
+    <span class="header-sub">// CTF STEGANOGRAPHY CHALLENGE</span>
+  </div>
+  <div class="header-meta">
+    <span>⏱ <span id="timer" style="color:#f0883e;font-weight:bold">00:00</span></span>
+    <span>⚑ <span id="score-disp" style="color:#56d364;font-weight:bold">1000 pts</span></span>
+    <span>✗ <span id="wrong-disp" style="color:#f85149">0 wrong</span></span>
+  </div>
+</div>
+
+<div class="body" id="game-body">
+  <div class="sidebar">
+    <div class="sh3">Challenge Info</div>
+    <div>
+      <span class="badge bh">HARD</span>
+      <span class="badge bs">Steganography</span>
+      <span class="badge bp">1000 pts</span>
+    </div>
+    <div class="ci">
+      A classified transmission was intercepted. Something is hidden inside. Surface-level analysis reveals nothing — the truth is buried deeper.
+    </div>
+
+    <div class="sh3">Flag Format</div>
+    <div class="ci" style="color:#bc8cff;font-size:12px;letter-spacing:.5px">H4Perps{...}</div>
+
+    <div class="prog">
+      <div style="font-size:10px;color:#8b949e">Progress</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+
+    <div class="hints">
+      <div class="sh3">Hints <span style="color:#f0883e">(-250 pts)</span></div>
+      <div class="htxt" id="h1t">The image is hiding something. Not all pixels are what they seem. Try analyzing pixel data directly.</div>
+      <button class="hbtn" id="h1b" onclick="useHint(1)">⚠ Hint #1</button>
+      <div class="htxt" id="h2t">Steganography often hides data in the least significant bits (LSB) of pixel color channels. Which channel could it be?</div>
+      <button class="hbtn" id="h2b" onclick="useHint(2)" disabled>⚠ Hint #2</button>
+      <div class="htxt" id="h3t">Focus on the <span style="color:#f85149">Red channel</span>, bit position <span style="color:#f85149">0</span>. Read pixels left-to-right from the start of the image. Every 8 bits is one character — convert to ASCII.</div>
+      <button class="hbtn" id="h3b" onclick="useHint(3)" disabled>⚠ Hint #3</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <button class="tbtn a" id="tab-briefing" onclick="tab('briefing')">◈ BRIEFING</button>
+      <button class="tbtn" id="tab-evidence" onclick="tab('evidence')">◈ EVIDENCE</button>
+      <button class="tbtn" id="tab-tools" onclick="tab('tools')">◈ TOOLS</button>
+      <button class="tbtn" id="tab-submit" onclick="tab('submit')">◈ SUBMIT FLAG</button>
+    </div>
+
+    <!-- BRIEFING -->
+    <div class="tpanel a" id="tp-briefing">
+      <div class="tbox">
+        <div class="p">$ cat mission_brief.txt</div>
+        <div class="c2">─────────────────────────────────────────</div>
+        <div>CLASSIFICATION: <span class="er">TOP SECRET / SCI</span></div>
+        <div>OPERATION: <span class="hl">DEEP PIXEL</span> &nbsp;|&nbsp; CLEARANCE: ALPHA</div>
+        <div class="c2">─────────────────────────────────────────</div>
+        <br>
+        <div>Agent,</div><br>
+        <div>We intercepted a data transmission originating from a known threat actor. On the surface, the file appears to be an ordinary image — routine intelligence, nothing remarkable.</div><br>
+        <div>Our analysts believe it carries a <span class="wn">concealed message</span>. Preliminary inspection using standard tools returned nothing. Whoever constructed this knew what they were doing.</div><br>
+        <div>Several pieces of corroborating evidence have been collected and catalogued. <span class="er">Exercise caution — not all of it is genuine.</span> Some was planted deliberately to mislead.</div><br>
+        <div>You have been given access to our analysis toolkit. The clock is running.</div><br>
+        <div class="c2">─────────────────────────────────────────</div>
+        <div>OBJECTIVES:</div>
+        <div class="p">&nbsp; [○] Analyze the intercepted image</div>
+        <div class="p">&nbsp; [○] Extract the concealed message</div>
+        <div class="p">&nbsp; [○] Submit the flag in format H4Perps{...}</div>
+        <div class="c2">─────────────────────────────────────────</div>
+        <div>Good luck. <span class="blink">_</span></div>
+      </div>
+      <div class="tbox" style="font-size:11px">
+        <div class="p">$ file intercepted_data.png</div>
+        <div class="c2">intercepted_data.png: PNG image data, 560 x 320, 8-bit/color RGBA, non-interlaced</div>
+        <div class="c2">MD5:&nbsp;&nbsp; a3f7c9b2d4e1f820b6c3d5e700a1b2c4</div>
+        <div class="c2">SHA256: 7e4a9f2b1d3c8e5f...a0b4d2c9e3f1a8b6</div>
+        <br>
+        <div class="p">$ strings intercepted_data.png | head -5</div>
+        <div class="c2">IHDR</div>
+        <div class="c2">sRGB</div>
+        <div class="c2">gAMA</div>
+        <div class="c2">IDAT</div>
+        <div class="c2">IEND</div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div class="tpanel" id="tp-evidence">
+      <div class="tbox" style="font-size:11px;margin-bottom:10px">
+        <span class="p">$ ls -la ./evidence/</span>&nbsp;&nbsp;
+        <span class="c2">intercepted_data.png &nbsp;[PRIMARY] &nbsp;&nbsp;transmission_log.txt [METADATA] &nbsp;&nbsp;suspicious_string.b64 [UNKNOWN] &nbsp;&nbsp;exif_dump.txt [EXTRACTED]</span>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:#8b949e;margin-bottom:6px">▸ intercepted_data.png — <span style="color:#f0883e">CLASSIFIED INTERCEPT</span></div>
+        <div class="cc">
+          <canvas id="main-canvas" width="560" height="320"></canvas>
+          <div class="pxi" id="pxi"></div>
+        </div>
+        <div style="font-size:10px;color:#8b949e;margin-top:4px">↑ Hover or click pixels to inspect RGB values &nbsp;|&nbsp; <span style="color:#bc8cff">Pixel (0,0) to (559,0) = Row 1</span></div>
+      </div>
+
+      <div class="eg">
+        <div class="ei">
+          <h4>▸ suspicious_string.b64</h4>
+          <pre>SGVsbG8gQWdlbnQuIFRoZSBr
+ZXkgaXMgYXQgNDQwIEh6LiBU
+aGUgaW1hZ2UgaG9sZHMgbm8g
+c2VjcmV0cy4=</pre>
+        </div>
+        <div class="ei">
+          <h4>▸ exif_dump.txt</h4>
+          <pre>Software: Enc0der v3.1-classified
+GPS Lat: 37°46'12"N
+GPS Lon: 122°25'09"W
+DateTimeOrig: 1970:01:01 00:00:00
+Comment: cHJpb3JpdHktYWxwaGE=
+UserComment: [SCRUBBED]
+Artist: AGENT_X // UNKNOWN</pre>
+        </div>
+        <div class="ei">
+          <h4>▸ transmission_log.txt</h4>
+          <pre>reviewing intercepted transmission&#x200B;&#x200D;&#x200B;&#x200B;&#x200B;&#x200D;&#x200D;&#x200B;&#x200D;&#x200B;&#x200D;&#x200B;&#x200B;&#x200D;&#x200D;&#x200B;...
+signal origin: UNKNOWN_NODE
+frequency band: 440&#x200B;&#x200D;&#x200D;&#x200B;&#x200D;&#x200B;&#x200B;&#x200B; Hz
+encryption: UNKNOWN
+channel: UNRESOLVED
+status: PENDING_ANALYSIS</pre>
+        </div>
+        <div class="ei">
+          <h4>▸ hex_dump.txt (first 32B)</h4>
+          <pre>89 50 4E 47 0D 0A 1A 0A
+00 00 00 0D 49 48 44 52
+00 00 02 30 00 00 01 40
+08 06 00 00 00 A3 2C E1
+
+[NOTE: standard PNG header]
+[IDAT payload: 47,832 bytes]</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="tpanel" id="tp-tools">
+
+      <div class="tool">
+        <div class="th" onclick="toggleTool('lsb')">
+          <span>🔬 LSB Extractor — pixel bit-plane analysis</span>
+          <span id="lsb-arr">▾</span>
+        </div>
+        <div class="tb2" id="lsb-body">
+          <div class="cg">
+            <label>Channel:</label>
+            <select id="lsb-ch"><option>R</option><option>G</option><option>B</option><option>A</option></select>
+          </div>
+          <div class="cg">
+            <label>Bit position:</label>
+            <select id="lsb-bit">
+              <option value="0">0 — LSB (least significant)</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7 — MSB (most significant)</option>
+            </select>
+          </div>
+          <div class="cg">
+            <label>Pixel count:</label>
+            <input type="number" id="lsb-px" value="200" min="1" max="179200" style="width:90px">
+            <span style="font-size:10px;color:#8b949e">(image: 560×320 = 179,200 total)</span>
+          </div>
+          <div class="cg">
+            <label>Output format:</label>
+            <select id="lsb-fmt">
+              <option value="bin">Binary (0/1)</option>
+              <option value="hex">Hexadecimal</option>
+              <option value="dec">Decimal bytes</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="rbtn" onclick="runLSB()">▶ Extract</button>
+            <button class="rbtn rbtn2" id="ascii-btn" onclick="lsbToASCII()" style="display:none">⇒ Convert bits → ASCII</button>
+          </div>
+          <div class="ob" id="lsb-out"></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="th" onclick="toggleTool('b64')">
+          <span>🔓 Base64 Decoder</span>
+          <span id="b64-arr">▾</span>
+        </div>
+        <div class="tb2" id="b64-body">
+          <div class="cg">
+            <label>Base64 input:</label>
+            <input type="text" id="b64-in" placeholder="Paste base64 encoded string here..." style="flex:1;min-width:200px">
+          </div>
+          <button class="rbtn" onclick="runB64()">▶ Decode</button>
+          <div class="ob" id="b64-out"></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="th" onclick="toggleTool('bintxt')">
+          <span>🔢 Binary → ASCII Converter</span>
+          <span id="bintxt-arr">▾</span>
+        </div>
+        <div class="tb2" id="bintxt-body">
+          <div class="cg">
+            <label>Bit string:</label>
+            <input type="text" id="bin-in" placeholder="e.g. 01001000 01101001 ..." style="flex:1;min-width:200px">
+          </div>
+          <button class="rbtn" onclick="runBinASCII()">▶ Convert</button>
+          <div class="ob" id="bintxt-out"></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="th" onclick="toggleTool('freq')">
+          <span>📡 Frequency Spectrum Analyzer</span>
+          <span id="freq-arr">▾</span>
+        </div>
+        <div class="tb2" id="freq-body">
+          <div style="font-size:11px;color:#8b949e;margin-bottom:10px">Analyzing spectral components of the intercepted signal data...</div>
+          <canvas id="freq-canvas" width="500" height="90" style="border:1px solid #30363d;border-radius:4px;background:#010409;display:block"></canvas>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#8b949e;margin-top:5px">
+            <span>0 Hz</span><span style="color:#f85149;font-weight:bold">Peak: 440.0 Hz ↑</span><span>SNR: −12.4 dB</span><span>22050 Hz</span>
+          </div>
+          <div style="font-size:10px;color:#f0883e;margin-top:6px">⚠ Confidence: 34% — signal may contain embedded data at 440Hz carrier</div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="th" onclick="toggleTool('xor')">
+          <span>⊕ XOR Cipher Decoder</span>
+          <span id="xor-arr">▾</span>
+        </div>
+        <div class="tb2" id="xor-body">
+          <div class="cg">
+            <label>Data (hex):</label>
+            <input type="text" id="xor-in" placeholder="e.g. 4a3f2b1c8d..." style="flex:1;min-width:200px">
+          </div>
+          <div class="cg">
+            <label>Key (hex):</label>
+            <input type="text" id="xor-key" placeholder="e.g. ff or deadbeef" style="width:150px">
+          </div>
+          <button class="rbtn" onclick="runXOR()">▶ Decode</button>
+          <div class="ob" id="xor-out"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="tpanel" id="tp-submit">
+      <div class="tbox" style="margin-bottom:16px">
+        <div class="p">$ ./submit_flag.sh</div>
+        <div class="c2">Enter the extracted flag to complete Operation Deep Pixel.</div>
+        <div class="c2">Format: <span style="color:#bc8cff">H4Perps{...}</span></div>
+      </div>
+      <div class="flag-form">
+        <input class="finput" id="flag-input" type="text" placeholder="H4Perps{...}" autocomplete="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter')submitFlag()">
+        <div>
+          <button class="sbtn" onclick="submitFlag()">▶ SUBMIT</button>
+        </div>
+        <div class="sres" id="flag-result"></div>
+        <div class="att">Attempts: <span id="att-cnt">0</span></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /body -->
+
+<!-- SOLVED — sits between .body and footer, shares the same border column -->
+<div class="solved" id="solved-view">
+  <div class="sbox">
+    <div style="font-size:36px;color:#56d364;margin-bottom:8px">✓</div>
+    <div style="font-size:18px;font-weight:bold;color:#56d364;letter-spacing:2px;margin-bottom:4px">FLAG CAPTURED</div>
+    <div style="font-size:11px;color:#8b949e;letter-spacing:2px;margin-bottom:16px">OPERATION DEEP PIXEL — COMPLETE</div>
+    <div style="font-family:monospace;font-size:13px;color:#bc8cff;background:#0d1117;padding:10px 14px;border-radius:4px;margin-bottom:16px;word-break:break-all" id="flag-display"></div>
+    <div style="font-size:48px;font-weight:bold;color:#f0883e;line-height:1" id="final-score">1000</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:16px">points</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:20px">
+      Time: <span style="color:#c9d1d9" id="final-time">--:--</span> &nbsp;|&nbsp;
+      Hints used: <span style="color:#c9d1d9" id="final-hints">0</span> &nbsp;|&nbsp;
+      Wrong guesses: <span style="color:#c9d1d9" id="final-wrong">0</span>
+    </div>
+    <button class="rbtn" onclick="resetGame()" style="width:100%;padding:10px;font-size:13px">↺ Play Again</button>
+  </div>
+</div>
+
+<div class="site-footer">
+  <span>CTF PLATFORM v4.2 — SECURE TERMINAL</span>
+  <span>CHALLENGE ID: stego-deepx-001 &nbsp;|&nbsp; CATEGORY: STEGANOGRAPHY</span>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// Flag stored obfuscated — not in plain text in source
+const _f=[72,52,80,101,114,112,115,123,36,116,48,112,32,84,35,105,78,107,49,110,71,125];
+const FLAG=_f.map(c=>String.fromCharCode(c)).join('');
+let score=1000, hints=0, attempts=0, wrongCount=0, timerSec=0, timerRunning=true;
+let lastBits=[], imgData=null;
+const toolOpen={lsb:true,b64:true,bintxt:true,freq:true,xor:true};
+
+// Timer
+setInterval(()=>{
+  if(!timerRunning) return;
+  timerSec++;
+  document.getElementById('timer').textContent=
+    String(Math.floor(timerSec/60)).padStart(2,'0')+':'+String(timerSec%60).padStart(2,'0');
+},1000);
+
+// Deterministic PRNG (seeded, stable across runs)
+function rng(n){let x=Math.sin(n*9301.5+49297)*233280;return x-Math.floor(x);}
+
+// Draw canvas + encode flag in LSB of Red channel
+function drawCanvas(){
+  const cv=document.getElementById('main-canvas');
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  const W=cv.width,H=cv.height;
+
+  // Sky gradient
+  const sk=ctx.createLinearGradient(0,0,0,H*.72);
+  sk.addColorStop(0,'#020816');sk.addColorStop(1,'#0b1b30');
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H);
+
+  // Stars
+  for(let i=0;i<220;i++){
+    const sx=rng(i*11+1)*W,sy=rng(i*11+2)*H*.7,sr=rng(i*11+3)*1.3+.2;
+    ctx.fillStyle=`rgba(200,215,255,${.35+rng(i*11+4)*.65})`;
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fill();
+  }
+
+  // Crescent moon
+  ctx.fillStyle='rgba(230,225,200,0.09)';
+  ctx.beginPath();ctx.arc(460,48,28,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0b1b30';
+  ctx.beginPath();ctx.arc(472,44,24,0,Math.PI*2);ctx.fill();
+
+  // Water / ground
+  const wt=ctx.createLinearGradient(0,H*.72,0,H);
+  wt.addColorStop(0,'#060e1c');wt.addColorStop(1,'#020810');
+  ctx.fillStyle=wt;ctx.fillRect(0,H*.72,W,H*.28);
+
+  // City buildings
+  const bl=[
+    [0,52,175],[42,72,215],[104,44,162],[140,58,248],[188,68,188],
+    [248,48,230],[288,80,172],[358,52,268],[404,62,198],[456,85,218],[536,62,155]
+  ];
+  bl.forEach(([x,w,h])=>{
+    ctx.fillStyle='#0c1f35';ctx.fillRect(x,H*.72-h,w,h);
+    for(let wy=H*.72-h+12;wy<H*.72-8;wy+=14){
+      for(let wx=x+6;wx<x+w-6;wx+=11){
+        if(rng(wx*13+wy*7)>.38){
+          ctx.fillStyle=rng(wx*3+wy)>.62?'rgba(255,218,88,.65)':'rgba(100,148,255,.38)';
+          ctx.fillRect(wx,wy,5,7);
+        }
+      }
+    }
+  });
+
+  // Subtle water reflections
+  ctx.globalAlpha=.12;
+  bl.forEach(([x,w,h])=>{
+    ctx.fillStyle='#1a3a5c';ctx.fillRect(x,H*.72,w,h*.25);
+  });
+  ctx.globalAlpha=1;
+
+  // Encode flag: LSB of Red channel, pixels 0..N-1, row-major
+  imgData=ctx.getImageData(0,0,W,H);
+  const bits=[];
+  for(const ch of FLAG){
+    const c=ch.charCodeAt(0);
+    for(let b=7;b>=0;b--) bits.push((c>>b)&1);
+  }
+  for(let i=0;i<bits.length;i++){
+    imgData.data[i*4]=(imgData.data[i*4]&0xFE)|bits[i];
+  }
+  ctx.putImageData(imgData,0,0);
+  // Re-read so hover inspector reflects encoded values
+  imgData=ctx.getImageData(0,0,W,H);
+
+  // Pixel inspector tooltip
+  cv.addEventListener('mousemove',e=>{
+    const rect=cv.getBoundingClientRect();
+    const scaleX=W/rect.width, scaleY=H/rect.height;
+    const px=Math.floor((e.clientX-rect.left)*scaleX);
+    const py=Math.floor((e.clientY-rect.top)*scaleY);
+    if(px<0||py<0||px>=W||py>=H) return;
+    const idx=(py*W+px)*4;
+    const info=document.getElementById('pxi');
+    info.style.display='block';
+    // Clamp tooltip so it never overflows the canvas container
+    const maxLeft=rect.width-185;
+    info.style.left=Math.min(e.offsetX+12, maxLeft)+'px';
+    info.style.top=Math.max(e.offsetY-35, 2)+'px';
+    info.textContent=`(${px},${py})  R:${imgData.data[idx]}  G:${imgData.data[idx+1]}  B:${imgData.data[idx+2]}  A:${imgData.data[idx+3]}`;
+  });
+  cv.addEventListener('mouseleave',()=>{
+    document.getElementById('pxi').style.display='none';
+  });
+}
+
+// Frequency spectrum canvas (decorative red herring)
+function drawFreq(){
+  const fc=document.getElementById('freq-canvas');
+  if(!fc) return;
+  const ctx=fc.getContext('2d');
+  ctx.fillStyle='#010409';ctx.fillRect(0,0,fc.width,fc.height);
+  // Grid
+  ctx.strokeStyle='#1a2030';ctx.lineWidth=1;
+  for(let x=0;x<fc.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,fc.height);ctx.stroke();}
+  for(let y=0;y<fc.height;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(fc.width,y);ctx.stroke();}
+  // Noise floor
+  ctx.strokeStyle='#56d36450';ctx.lineWidth=1;ctx.beginPath();
+  for(let x=0;x<fc.width;x++){
+    const v=0.08+rng(x*3)*.15+.05*Math.sin(x*.4);
+    ctx.lineTo(x,fc.height-(v*fc.height));
+  }ctx.stroke();
+  // Signal with 440 Hz spike
+  ctx.strokeStyle='#56d364';ctx.lineWidth=1.5;ctx.beginPath();
+  for(let x=0;x<fc.width;x++){
+    let v=rng(x*7)*.08+.04;
+    v+=.15*Math.exp(-((x-180)**2)/400);
+    v+=.70*Math.exp(-((x-220)**2)/30);  // 440 Hz spike
+    v+=.08*Math.exp(-((x-310)**2)/800);
+    ctx.lineTo(x,fc.height-(v*fc.height*.9));
+  }ctx.stroke();
+  // Dashed marker at 440 Hz position
+  ctx.strokeStyle='#f8514988';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(220,0);ctx.lineTo(220,fc.height);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// Tab switching — IDs must match button IDs (tab-<name>) and panel IDs (tp-<name>)
+const TAB_NAMES=['briefing','evidence','tools','submit'];
+function tab(name){
+  TAB_NAMES.forEach(n=>{
+    document.getElementById('tab-'+n).classList.toggle('a', n===name);
+    document.getElementById('tp-'+n).classList.toggle('a', n===name);
+  });
+  if(name==='tools') setTimeout(drawFreq, 50);
+}
+
+// Tool accordion toggle
+function toggleTool(name){
+  toolOpen[name]=!toolOpen[name];
+  document.getElementById(name+'-body').style.display=toolOpen[name]?'block':'none';
+  document.getElementById(name+'-arr').textContent=toolOpen[name]?'▾':'▸';
+}
+
+// LSB extractor
+function runLSB(){
+  if(!imgData){alert('Image not loaded yet. Open the Evidence tab first.');return;}
+  const ch=document.getElementById('lsb-ch').value;
+  const bit=parseInt(document.getElementById('lsb-bit').value);
+  const numPx=Math.min(parseInt(document.getElementById('lsb-px').value)||200, imgData.width*imgData.height);
+  const fmt=document.getElementById('lsb-fmt').value;
+  const offset={R:0,G:1,B:2,A:3}[ch];
+  const bits=[];
+  for(let i=0;i<numPx;i++) bits.push((imgData.data[i*4+offset]>>bit)&1);
+  lastBits=[...bits];
+  const box=document.getElementById('lsb-out');
+  box.style.display='block';
+  if(fmt==='bin'){
+    const chunks=[];
+    for(let i=0;i<bits.length;i+=8) chunks.push(bits.slice(i,i+8).join(''));
+    box.textContent=chunks.join(' ')+'\n\n['+bits.length+' bits extracted — channel '+ch+', bit '+bit+']';
+    document.getElementById('ascii-btn').style.display='inline-block';
+  } else if(fmt==='hex'){
+    const h=[];
+    for(let i=0;i+7<bits.length;i+=8) h.push(parseInt(bits.slice(i,i+8).join(''),2).toString(16).padStart(2,'0').toUpperCase());
+    box.textContent=h.join(' ')+'\n\n['+h.length+' bytes extracted]';
+    document.getElementById('ascii-btn').style.display='none';
+  } else {
+    const d=[];
+    for(let i=0;i+7<bits.length;i+=8) d.push(parseInt(bits.slice(i,i+8).join(''),2));
+    box.textContent=d.join(' ')+'\n\n['+d.length+' bytes extracted]';
+    document.getElementById('ascii-btn').style.display='none';
+  }
+}
+
+function lsbToASCII(){
+  if(!lastBits.length) return;
+  const chars=[];
+  for(let i=0;i+7<lastBits.length;i+=8){
+    const b=parseInt(lastBits.slice(i,i+8).join(''),2);
+    if(b===0) break;  // null terminator
+    chars.push(b>=32&&b<127?String.fromCharCode(b):`[0x${b.toString(16)}]`);
+  }
+  const box=document.getElementById('lsb-out');
+  box.textContent+='\n\n→ ASCII: '+chars.join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+// Base64 decoder
+function runB64(){
+  const box=document.getElementById('b64-out');
+  box.style.display='block';
+  try{
+    box.textContent=atob(document.getElementById('b64-in').value.trim().replace(/\s+/g,''));
+  }catch(e){
+    box.textContent='Error: Invalid base64 — '+e.message;
+  }
+}
+
+// Binary → ASCII converter
+function runBinASCII(){
+  const input=document.getElementById('bin-in').value.replace(/\s+/g,'');
+  const box=document.getElementById('bintxt-out');
+  box.style.display='block';
+  if(!/^[01]+$/.test(input)){box.textContent='Error: Input must be binary (0s and 1s only)';return;}
+  const chars=[];
+  for(let i=0;i+7<input.length;i+=8){
+    const b=parseInt(input.slice(i,i+8),2);
+    chars.push(b>=32&&b<127?String.fromCharCode(b):`[${b}]`);
+  }
+  box.textContent='Result ('+Math.floor(input.length/8)+' chars): '+chars.join('');
+}
+
+// XOR decoder
+function runXOR(){
+  const hi=document.getElementById('xor-in').value.replace(/\s+/g,'');
+  const hk=document.getElementById('xor-key').value.replace(/\s+/g,'');
+  const box=document.getElementById('xor-out');
+  box.style.display='block';
+  if(!hi||!hk){box.textContent='Error: Provide both data and key';return;}
+  try{
+    const b=hi.match(/.{1,2}/g).map(h=>parseInt(h,16));
+    const k=hk.match(/.{1,2}/g).map(h=>parseInt(h,16));
+    const r=b.map((v,i)=>v^k[i%k.length]);
+    box.textContent=
+      'HEX:   '+r.map(v=>v.toString(16).padStart(2,'0').toUpperCase()).join(' ')+
+      '\nASCII: '+r.map(v=>v>=32&&v<127?String.fromCharCode(v):'.').join('');
+  }catch(e){
+    box.textContent='Error: '+e.message;
+  }
+}
+
+// Hints — each costs 250 pts, unlocks sequentially
+function useHint(n){
+  if(n===1){
+    document.getElementById('h1t').classList.add('v');
+    document.getElementById('h1b').disabled=true;
+    document.getElementById('h2b').disabled=false;
+  } else if(n===2){
+    document.getElementById('h2t').classList.add('v');
+    document.getElementById('h2b').disabled=true;
+    document.getElementById('h3b').disabled=false;
+  } else {
+    document.getElementById('h3t').classList.add('v');
+    document.getElementById('h3b').disabled=true;
+  }
+  hints++;
+  score=Math.max(250, score-250);
+  document.getElementById('score-disp').textContent=score+' pts';
+  // Progress bar: hints contribute 20% each (max 60%), solved = 100%
+  document.getElementById('prog-fill').style.width=(hints*20)+'%';
+}
+
+// Flag submission
+const wrongMsgs=[
+  '✗ Incorrect. The answer is not on the surface.',
+  '✗ Wrong flag. Are you looking in the right channel?',
+  '✗ Incorrect. Check your bit order — MSB first.',
+  '✗ Not quite. Verify the channel and bit position.',
+  '✗ Wrong. Every pixel in row 0 is a suspect.',
+  '✗ Incorrect. Think about what "least significant" means.',
+];
+
+function submitFlag(){
+  const input=document.getElementById('flag-input').value.trim();
+  const res=document.getElementById('flag-result');
+  attempts++;
+  document.getElementById('att-cnt').textContent=attempts;
+
+  if(input===FLAG){
+    timerRunning=false;
+    res.className='sres ok';
+    res.textContent='✓ Correct! Flag accepted. Initiating mission debrief...';
+    document.getElementById('prog-fill').style.width='100%';
+    setTimeout(()=>{
+      document.getElementById('game-body').style.display='none';
+      const sv=document.getElementById('solved-view');
+      sv.classList.add('show');
+      document.getElementById('flag-display').textContent=input;
+      document.getElementById('final-score').textContent=score;
+      document.getElementById('final-time').textContent=
+        String(Math.floor(timerSec/60)).padStart(2,'0')+':'+String(timerSec%60).padStart(2,'0');
+      document.getElementById('final-hints').textContent=hints;
+      // wrong guesses = total attempts minus the final correct one
+      document.getElementById('final-wrong').textContent=attempts-1;
+    },900);
+  } else {
+    wrongCount++;
+    document.getElementById('wrong-disp').textContent=wrongCount+' wrong';
+    res.className='sres no';
+    res.textContent=wrongMsgs[Math.min(wrongCount-1, wrongMsgs.length-1)];
+  }
+}
+
+// Full game reset
+function resetGame(){
+  score=1000; hints=0; attempts=0; wrongCount=0; timerSec=0; timerRunning=true; lastBits=[];
+  document.getElementById('score-disp').textContent='1000 pts';
+  document.getElementById('wrong-disp').textContent='0 wrong';
+  document.getElementById('att-cnt').textContent='0';
+  document.getElementById('timer').textContent='00:00';
+  document.getElementById('prog-fill').style.width='0';
+  document.getElementById('flag-input').value='';
+  const fr=document.getElementById('flag-result');
+  fr.style.display='none'; fr.className='sres';
+  ['h1t','h2t','h3t'].forEach(id=>document.getElementById(id).classList.remove('v'));
+  document.getElementById('h1b').disabled=false;
+  document.getElementById('h2b').disabled=true;
+  document.getElementById('h3b').disabled=true;
+  ['lsb-out','b64-out','bintxt-out','xor-out'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('ascii-btn').style.display='none';
+  document.getElementById('solved-view').classList.remove('show');
+  document.getElementById('game-body').style.display='flex';
+  tab('briefing');
+  drawCanvas();
+}
+
+// Init
+drawCanvas();
+</script>
+</body>
+</html>
